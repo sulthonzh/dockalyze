@@ -12,7 +12,8 @@
     "dev": "ts-node src/index.ts",
     "test": "jest",
     "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix"
+    "lint:fix": "eslint src --ext .ts --fix",
+    "test:standalone": "node --test test/test.mjs"
   },
   "keywords": [
     "docker",
