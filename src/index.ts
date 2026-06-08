@@ -179,17 +179,22 @@ function displayScanResults(result: any, format: string) {
     console.log(JSON.stringify(result, null, 2));
     return;
   }
-  
+
+  if (format === 'markdown') {
+    displayScanResultsMarkdown(result);
+    return;
+  }
+
   console.log(chalk.bold.blue('\n🔍 Security Scan Results'));
   console.log(chalk.gray(`Image: ${result.image}`));
-  
+
   const severityColors = {
     critical: 'red',
     high: 'red',
     medium: 'yellow',
     low: 'green'
   };
-  
+
   Object.entries(result.vulnerabilities || {}).forEach(([severity, vulns]) => {
     const vulnsArray = vulns as any[];
     if (vulnsArray.length > 0) {
@@ -204,6 +209,43 @@ function displayScanResults(result: any, format: string) {
       });
     }
   });
+}
+
+function displayScanResultsMarkdown(result: any) {
+  const severityEmoji: Record<string, string> = {
+    critical: '🔴', high: '🟠', medium: '🟡', low: '🟢'
+  };
+
+  console.log(`# Security Scan: \`${result.image}\``);
+  console.log('');
+  console.log(`| Severity | Count |`);
+  console.log(`|----------|-------|`);
+  for (const [sev, count] of Object.entries(result.summary || {})) {
+    if (sev === 'total') continue;
+    const emoji = severityEmoji[sev] || '⚪';
+    console.log(`| ${emoji} ${sev.charAt(0).toUpperCase() + sev.slice(1)} | ${count} |`);
+  }
+  console.log(`| **Total** | **${result.summary?.total || 0}** |`);
+  console.log('');
+
+  const severities = ['critical', 'high', 'medium', 'low'] as const;
+  for (const severity of severities) {
+    const vulns = (result.vulnerabilities?.[severity] || []) as any[];
+    if (vulns.length === 0) continue;
+
+    console.log(`## ${severityEmoji[severity] || ''} ${severity.charAt(0).toUpperCase() + severity.slice(1)} (${vulns.length})`);
+    console.log('');
+    console.log('| Package | Version | Description | CVE |');
+    console.log('|---------|---------|-------------|-----|');
+    for (const v of vulns) {
+      const desc = (v.description || '').replace('|', '\\|');
+      const cve = v.cve ? `[${v.cve}](${v.url || '#'})` : '-';
+      console.log(`| ${v.package} | ${v.version} | ${desc} | ${cve} |`);
+    }
+    console.log('');
+  }
+
+  console.log(`_Scanned at ${result.scannedAt}_`);
 }
 
 function displayPackages(result: any, options: any) {

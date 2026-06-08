@@ -1,6 +1,6 @@
 # dockalyze - Docker Image Analyzer & Security Scanner
 
-A zero-dependency Docker image analyzer and security scanner that helps you understand what's inside your containers and identify potential security risks.
+A lightweight Docker image analyzer and security scanner that helps you understand what's inside your containers and identify potential security risks.
 
 ## Why dockalyze?
 
