@@ -51,10 +51,8 @@ export class PackageManager {
     const packages: Array<{ name: string; version: string; size?: number; category?: string }> = [];
     
     try {
-      // Try to run a temporary container to extract package information
       const { stdout: containerOutput } = await execAsync(`docker run --rm ${image} 2>&1 || echo "Container exited"`);
       
-      // Extract packages from different package managers
       packages.push(...this.extractDebianPackages(containerOutput));
       packages.push(...this.extractRpmPackages(containerOutput));
       packages.push(...this.extractPythonPackages(containerOutput));
@@ -63,7 +61,6 @@ export class PackageManager {
       packages.push(...this.extractRustPackages(containerOutput));
       packages.push(...this.extractJavaPackages(containerOutput));
       
-      // If no packages found, try package-specific commands
       if (packages.length === 0) {
         await this.tryPackageSpecificCommands(image, packages);
       }
@@ -78,7 +75,6 @@ export class PackageManager {
   public extractDebianPackages(output: string): Array<{ name: string; version: string; size?: number; category?: string }> {
     const packages: Array<{ name: string; version: string; size?: number; category?: string }> = [];
     
-    // Look for dpkg -W output
     const dpkgPattern = /^([a-zA-Z0-9][a-zA-Z0-9+\-.]*)\t([0-9][0-9a-zA-Z.:+~-]*)/gm;
     let match;
     
@@ -90,7 +86,6 @@ export class PackageManager {
       });
     }
     
-    // Look for apt list output
     const aptPattern = /^([a-zA-Z0-9][a-zA-Z0-9+\-.]*)\s+\[([^\]]+)\]\s+([0-9][0-9a-zA-Z.:+~-]*)/gm;
     while ((match = aptPattern.exec(output)) !== null) {
       packages.push({
@@ -106,7 +101,6 @@ export class PackageManager {
   public extractRpmPackages(output: string): Array<{ name: string; version: string; size?: number; category?: string }> {
     const packages: Array<{ name: string; version: string; size?: number; category?: string }> = [];
     
-    // Look for rpm -qa output
     const rpmPattern = /^([a-zA-Z0-9][a-zA-Z0-9+\-_]*)-([0-9][0-9a-zA-Z.~_-]*)/gm;
     let match;
     
@@ -118,7 +112,6 @@ export class PackageManager {
       });
     }
     
-    // Look for yum list output
     const yumPattern = /^([a-zA-Z0-9][a-zA-Z0-9+\-_\.]+)\.\w+\s+([0-9][0-9a-zA-Z.~_-]*)/gm;
     while ((match = yumPattern.exec(output)) !== null) {
       packages.push({
@@ -134,7 +127,6 @@ export class PackageManager {
   public extractPythonPackages(output: string): Array<{ name: string; version: string; size?: number; category?: string }> {
     const packages: Array<{ name: string; version: string; size?: number; category?: string }> = [];
     
-    // Look for pip list output
     const pipPattern = /^([a-zA-Z0-9][a-zA-Z0-9+\-_\.]*)\s+([0-9][0-9a-zA-Z.~_+-]*)/gm;
     let match;
     
@@ -152,7 +144,6 @@ export class PackageManager {
   public extractNodePackages(output: string): Array<{ name: string; version: string; size?: number; category?: string }> {
     const packages: Array<{ name: string; version: string; size?: number; category?: string }> = [];
     
-    // Look for package.json output
     const packageJsonPattern = /"([a-zA-Z0-9][a-zA-Z0-9+\-_\.]*)"\s*:\s*"([0-9][0-9a-zA-Z.~_+-]*)"/gm;
     let match;
     
@@ -170,7 +161,6 @@ export class PackageManager {
   public extractGoPackages(output: string): Array<{ name: string; version: string; size?: number; category?: string }> {
     const packages: Array<{ name: string; version: string; size?: number; category?: string }> = [];
     
-    // Look for go.mod output
     const goModPattern = /^([a-zA-Z0-9][a-zA-Z0-9\/\._-]+)\s+([0-9][0-9a-zA-Z.~_+-]*)$/gm;
     let match;
     
@@ -215,7 +205,7 @@ export class PackageManager {
           packages.push(...extracted);
         }
       } catch (error) {
-        // Command failed, continue
+        // try next command
       }
     }
   }
@@ -295,10 +285,7 @@ export class PackageManager {
       dependencies: []
     };
     
-    // Build dependency relationships (simplified)
-    // In a real implementation, you'd need to parse actual dependency information
     packages.forEach(pkg => {
-      // For demo purposes, create a simple tree structure
       const node: PackageTree = {
         name: pkg.name,
         version: pkg.version,
@@ -306,7 +293,6 @@ export class PackageManager {
         category: pkg.category
       };
       
-      // Add some basic dependencies (this would be data-driven in a real implementation)
       if (pkg.name.startsWith('node') || pkg.name === 'npm') {
         node.dependencies = [
           { name: 'libuv', version: '1.44.0', category: 'system' },

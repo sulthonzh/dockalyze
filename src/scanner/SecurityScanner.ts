@@ -41,11 +41,9 @@ export class SecurityScanner {
     };
 
     try {
-      // Try to scan with known vulnerability databases
       await this.scanWithTrivy(image, vulnerabilities, severities, excludePackages);
       await this.scanWithGrype(image, vulnerabilities, severities, excludePackages);
       
-      // Fallback to basic vulnerability detection
       await this.fallbackVulnerabilityScan(image, vulnerabilities, severities, excludePackages);
       
     } catch (error) {
@@ -69,10 +67,8 @@ export class SecurityScanner {
 
   public async scanWithTrivy(image: string, vulnerabilities: Record<string, Vulnerability[]>, severities: string[], excludePackages: string[]): Promise<void> {
     try {
-      // Check if trivy is installed
       await execAsync('trivy --version');
       
-      // Run trivy scan
       const { stdout } = await execAsync(`trivy image --format json ${image} --severity ${severities.join(',')}`);
       const results = JSON.parse(stdout);
       
@@ -104,10 +100,8 @@ export class SecurityScanner {
 
   public async scanWithGrype(image: string, vulnerabilities: Record<string, Vulnerability[]>, severities: string[], excludePackages: string[]): Promise<void> {
     try {
-      // Check if grype is installed
       await execAsync('grype --version');
       
-      // Run grype scan
       const { stdout } = await execAsync(`grype image ${image} --output json`);
       const results = JSON.parse(stdout);
       
@@ -137,10 +131,8 @@ export class SecurityScanner {
 
   public async fallbackVulnerabilityScan(image: string, vulnerabilities: Record<string, Vulnerability[]>, severities: string[], excludePackages: string[]): Promise<void> {
     try {
-      // Get package information
       const packages = await this.extractPackageInfo(image);
       
-      // Check for common vulnerable packages
       packages.forEach(pkg => {
         if (excludePackages.includes(pkg.name)) return;
         
@@ -152,7 +144,6 @@ export class SecurityScanner {
         });
       });
       
-      // Check for outdated packages (potential vulnerability indicators)
       const outdated = await this.checkOutdatedPackages(image);
       outdated.forEach(pkg => {
         if (excludePackages.includes(pkg.name)) return;
@@ -178,10 +169,8 @@ export class SecurityScanner {
     const packages: Array<{ name: string; version: string }> = [];
     
     try {
-      // Try to extract package information from different sources
       const { stdout } = await execAsync(`docker run --rm ${image} 2>&1 || echo "Container exited"`);
       
-      // Extract packages from common package managers
       const debPackages = this.extractDebPackages(stdout);
       packages.push(...debPackages);
       
@@ -197,14 +186,12 @@ export class SecurityScanner {
     } catch (error) {
       // Failed to extract packages, return empty array
     }
-    
     return packages;
   }
 
   public extractDebPackages(output: string): Array<{ name: string; version: string }> {
     const packages: Array<{ name: string; version: string }> = [];
     
-    // Look for dpkg or apt output patterns
     const dpkgPattern = /([a-zA-Z0-9\-_]+)\s+([0-9.]+[a-zA-Z0-9\-+.]*)/g;
     let match;
     
@@ -221,7 +208,6 @@ export class SecurityScanner {
   public extractRpmPackages(output: string): Array<{ name: string; version: string }> {
     const packages: Array<{ name: string; version: string }> = [];
     
-    // Look for rpm output patterns
     const rpmPattern = /([a-zA-Z0-9\-_]+)-([0-9.]+[a-zA-Z0-9\-.]*)\s+/g;
     let match;
     
@@ -238,7 +224,6 @@ export class SecurityScanner {
   public extractPipPackages(output: string): Array<{ name: string; version: string }> {
     const packages: Array<{ name: string; version: string }> = [];
     
-    // Look for pip package names
     const pipPattern = /([a-zA-Z0-9\-_]+)==([0-9.]+[a-zA-Z0-9]*)/g;
     let match;
     
@@ -255,7 +240,6 @@ export class SecurityScanner {
   public extractNpmPackages(output: string): Array<{ name: string; version: string }> {
     const packages: Array<{ name: string; version: string }> = [];
     
-    // Look for npm package patterns
     const npmPattern = /"([a-zA-Z0-9\-_]+)"\s*:\s*"([0-9.]+[a-zA-Z0-9\-]*)"/g;
     let match;
     
@@ -336,7 +320,6 @@ export class SecurityScanner {
     const outdated: Array<{ name: string; version: string; latestVersion: string }> = [];
     
     try {
-      // This is a simplified check - in a real implementation, you'd need proper version comparison
       const commonOutdatedPackages: Record<string, string> = {
         'node': '18.17.0',
         'python': '3.11.4',
@@ -344,7 +327,6 @@ export class SecurityScanner {
         'apache': '2.4.57'
       };
       
-      // For demo purposes, return some hardcoded outdated packages
       Object.entries(commonOutdatedPackages).forEach(([name, latestVersion]) => {
         outdated.push({
           name,

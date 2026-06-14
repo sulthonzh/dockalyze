@@ -81,11 +81,9 @@ export class SizeAnalyzer {
     const files: Array<{ path: string; size: number; layerId?: string }> = [];
     
     try {
-      // Create a temporary container to inspect files
       const containerId = await this.createTemporaryContainer(image);
       
       try {
-        // Get file sizes using du command
         const { stdout } = await execAsync(`docker exec ${containerId} find / -type f -exec du -b {} \\; 2>/dev/null || echo "No files found"`);
         
         if (stdout.trim() !== 'No files found') {
@@ -101,11 +99,9 @@ export class SizeAnalyzer {
           });
         }
         
-        // Also get layer-specific file information
         await this.addLayerFileInfo(containerId, files);
         
       } finally {
-        // Clean up the temporary container
         await execAsync(`docker rm -f ${containerId}`).catch(() => {
           // Container already removed or failed to remove
         });
@@ -128,13 +124,10 @@ export class SizeAnalyzer {
 
   public async addLayerFileInfo(containerId: string, files: Array<{ path: string; size: number; layerId?: string }>): Promise<void> {
     try {
-      // Get file sizes for each layer using docker diff
       const { stdout: diffOutput } = await execAsync(`docker diff ${containerId}`);
       const changedFiles = diffOutput.trim().split('\n').filter(line => line.startsWith('A') || line.startsWith('M'));
       
-      // Add layer information to files
       changedFiles.forEach(line => {
-        const fileOp = line.charAt(0);
         const filePath = line.substring(2);
         files.push({
           path: filePath,
@@ -206,7 +199,6 @@ export class SizeAnalyzer {
     return distribution;
   }
 
-  // Utility method for human-readable size formatting
   formatSize(bytes: number): string {
     if (bytes === 0) return '0 B';
     

@@ -57,7 +57,6 @@ function checkBaseImage(instruction) {
   const findings = [];
   const image = instruction.args.split(/\s+/)[0] || '';
 
-  // Check for :latest
   if (image.includes(':latest') || (!image.includes(':') && !image.includes('@sha256:'))) {
     findings.push({
       rule: 'DL3001',
@@ -67,7 +66,6 @@ function checkBaseImage(instruction) {
     });
   }
 
-  // Suspicious images
   const sus = ['ubuntu', 'debian', 'centos', 'fedora', 'alpine'];
   const base = image.split(':')[0].split('/').pop();
   if (sus.includes(base)) {
@@ -131,7 +129,6 @@ function checkRun(instruction) {
     });
   }
 
-  // Multiple RUN commands that could be combined
   if (args.includes('&&') === false && args.length > 20) {
     findings.push({
       rule: 'DL3059',
@@ -160,7 +157,6 @@ function checkCopyAdd(instruction) {
     }
   }
 
-  // Wildcard COPY .
   if (parts.some(p => p === '.' || p === '*') && instruction.instruction === 'ADD') {
     findings.push({
       rule: 'DL3011',
@@ -181,7 +177,6 @@ function analyzeGlobal(instructions) {
     findings.push({ rule: 'DL3000', severity: 'error', message: 'No FROM instruction found', line: 0 });
   }
 
-  // Check for USER
   const hasUser = instructions.some(i => i.instruction === 'USER');
   if (!hasUser && froms.length > 0) {
     findings.push({
@@ -192,7 +187,6 @@ function analyzeGlobal(instructions) {
     });
   }
 
-  // Check for HEALTHCHECK
   const hasHealth = instructions.some(i => i.instruction === 'HEALTHCHECK');
   if (!hasHealth) {
     findings.push({
@@ -203,7 +197,6 @@ function analyzeGlobal(instructions) {
     });
   }
 
-  // Multiple FROM without AS
   if (froms.length > 1) {
     froms.forEach((f, idx) => {
       if (idx < froms.length - 1) {
@@ -221,7 +214,6 @@ function analyzeGlobal(instructions) {
     });
   }
 
-  // EXPOSE with privileged port
   instructions.filter(i => i.instruction === 'EXPOSE').forEach(i => {
     const ports = i.args.split(/\s+/);
     ports.forEach(p => {
