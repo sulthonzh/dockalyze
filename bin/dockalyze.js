@@ -40,7 +40,6 @@ function findDockerfiles(dir) {
 }
 
 if (args.length === 0) {
-  // Try Dockerfile in current dir
   const local = path.join(process.cwd(), 'Dockerfile');
   if (fs.existsSync(local)) {
     const { output } = analyzeFile(local);

@@ -99,14 +99,12 @@ export class LayerAnalyzer {
   public parseCreatedBy(createdBy: string): string[] {
     if (!createdBy || createdBy === '<missing>') return [];
     
-    // Extract actual commands from the "CreatedBy" field
     const commands = createdBy
       .split(' /bin/sh -c ')
       .slice(1)
       .map(cmd => cmd.replace(/^(#( ?)|)/, ''))
       .filter(cmd => cmd.length > 0)
       .map(cmd => {
-        // Limit command length for display
         return cmd.length > 50 ? cmd.substring(0, 47) + '...' : cmd;
       });
     
@@ -127,7 +125,6 @@ export class LayerAnalyzer {
       return parseFloat(cleanStr);
     }
     
-    // Try to parse as bytes directly
     const sizeBytes = parseFloat(cleanStr);
     return isNaN(sizeBytes) ? 0 : sizeBytes;
   }
@@ -138,7 +135,6 @@ export class LayerAnalyzer {
     }
     
     try {
-      // Docker history format: "2024-01-01 12:00:00 +0000 UTC"
       const date = new Date(createdStr);
       return date.toISOString();
     } catch (error) {
@@ -170,9 +166,6 @@ export class LayerAnalyzer {
   }
 
   public analyzeBuildTimes(layers: LayerInfo[]): Array<{ layerId: string; time: number; commands: string[] }> {
-    // This is a simplified implementation
-    // In a real implementation, you'd need to analyze actual build times from logs or metadata
-    
     return layers.map(layer => ({
       layerId: layer.id,
       time: Math.random() * 60 + 10, // Simulated build time between 10-70 seconds
@@ -180,7 +173,6 @@ export class LayerAnalyzer {
     }));
   }
 
-  // Utility method for analyzing layer optimization opportunities
   public analyzeOptimization(layers: LayerInfo[]): {
     opportunities: Array<{
       layerId: string;
@@ -199,7 +191,6 @@ export class LayerAnalyzer {
     
     const recommendations: string[] = [];
     
-    // Analyze large layers
     layers.filter(layer => layer.size > 50 * 1024 * 1024).forEach(layer => {
       opportunities.push({
         layerId: layer.id,
@@ -211,7 +202,6 @@ export class LayerAnalyzer {
       recommendations.push(`Layer ${layer.id.substring(0, 12)} is ${this.formatSize(layer.size)}. Consider splitting into smaller layers.`);
     });
     
-    // Analyze layers with many commands
     layers.filter(layer => layer.commands.length > 3).forEach(layer => {
       opportunities.push({
         layerId: layer.id,
@@ -223,7 +213,6 @@ export class LayerAnalyzer {
       recommendations.push(`Layer ${layer.id.substring(0, 12)} has ${layer.commands.length} commands. Separate RUN commands into individual layers.`);
     });
     
-    // Check for cache inefficiencies
     const consecutiveCopyLayers = this.findConsecutiveCopyLayers(layers);
     if (consecutiveCopyLayers.length > 1) {
       recommendations.push('Consider combining COPY/ADD commands to improve build caching.');

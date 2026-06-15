@@ -8,7 +8,6 @@ import { DockerAnalyzer } from './analyzer/DockerAnalyzer';
 import { SecurityScanner } from './scanner/SecurityScanner';
 import { PackageManager } from './PackageManager';
 
-// Suppress strict type checking for now
 declare global {
   var vulns: any[];
 }
@@ -143,7 +142,6 @@ program
     }
   });
 
-// Helper functions for displaying results
 function displayAnalysis(result: any, verbose: boolean = false) {
   console.log(chalk.bold.blue('\n📋 Image Analysis'));
   console.log(chalk.gray(`Image: ${result.image}`));

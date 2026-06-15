@@ -58,7 +58,6 @@ export class DockerAnalyzer {
       const { stdout } = await execAsync(`docker images ${image} --format "{{.Size}}" --no-trunc`);
       const sizeStr = stdout.trim();
       
-      // Convert human-readable size to bytes
       if (sizeStr.endsWith('GB')) {
         return { size: parseFloat(sizeStr) * 1024 * 1024 * 1024 };
       } else if (sizeStr.endsWith('MB')) {
@@ -69,7 +68,6 @@ export class DockerAnalyzer {
         return { size: parseFloat(sizeStr) };
       }
       
-      // Try to parse as bytes directly
       const sizeBytes = parseFloat(sizeStr);
       return { size: isNaN(sizeBytes) ? 0 : sizeBytes };
     } catch (error) {
@@ -109,13 +107,9 @@ export class DockerAnalyzer {
   }
 
   public async extractPackages(image: string): Promise<PackageInfo[]> {
-    // This is a simplified implementation
-    // In a real implementation, you would need to handle different package managers
     try {
-      // Try to extract package information from common package managers
       const packages: PackageInfo[] = [];
       
-      // Check for Debian/Ubuntu packages
       try {
         const { stdout } = await execAsync(`docker run --rm ${image} dpkg-query -W 2>/dev/null || echo "No dpkg"`);
         if (stdout !== 'No dpkg\n') {
@@ -126,7 +120,6 @@ export class DockerAnalyzer {
         // No dpkg available, continue
       }
       
-      // Check for RPM packages (RedHat/CentOS)
       try {
         const { stdout } = await execAsync(`docker run --rm ${image} rpm -qa --queryformat '%{NAME}\t%{VERSION}\t%{SIZE}\n' 2>/dev/null || echo "No rpm"`);
         if (stdout !== 'No rpm\n') {
@@ -137,7 +130,6 @@ export class DockerAnalyzer {
         // No rpm available, continue
       }
       
-      // Check for Python packages
       try {
         const { stdout } = await execAsync(`docker run --rm ${image} pip list --format=freeze 2>/dev/null || echo "No pip"`);
         if (stdout !== 'No pip\n') {
@@ -148,7 +140,6 @@ export class DockerAnalyzer {
         // No pip available, continue
       }
       
-      // Check for Node.js packages
       try {
         const { stdout } = await execAsync(`docker run --rm ${image} npm list --depth=0 --json 2>/dev/null || echo "No npm"`);
         if (stdout !== 'No npm\n' && stdout !== '{}') {
@@ -166,14 +157,12 @@ export class DockerAnalyzer {
   }
 
   public parseCreatedBy(createdBy: string): string[] {
-    // Extract actual commands from the "CreatedBy" field
     return createdBy
       .split(' /bin/sh -c ')
       .slice(1)
       .map(cmd => cmd.replace(/^(#( ?)|)/, ''))
       .filter(cmd => cmd.length > 0)
       .map(cmd => {
-        // Limit command length for display
         return cmd.length > 50 ? cmd.substring(0, 47) + '...' : cmd;
       });
   }
@@ -192,7 +181,6 @@ export class DockerAnalyzer {
       return parseFloat(cleanStr);
     }
     
-    // Try to parse as bytes directly
     const sizeBytes = parseFloat(cleanStr);
     return isNaN(sizeBytes) ? 0 : sizeBytes;
   }
